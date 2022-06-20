@@ -24,16 +24,8 @@ class Receiver(Thread):
 
                 if response_type=="true":
                     with self.lock:
-                        self.requests.remove(request_number)
-
-                    for elem in l[3:]:
-                        print(elem)
+                        self.requests[request_number][1] = l[3:]
 
                 elif response_type=="error":
                     with self.lock:
-                        self.requests.remove(request_number)
-
-                    print(l[3])
-
-            elif snmp_type=="ack":
-                self.requests.add(request_number)
+                        self.requests[request_number][1] = "Error"

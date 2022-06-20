@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey
 
-class ConnectionError(Exception):
+class EncryptError(Exception):
     pass
 
 class X448_keys:
@@ -90,8 +90,6 @@ class DH:
         return recv
 
     def send(str, conn, shared_key):
-        print("ENVIADO: " + str)
-
         chacha = ChaCha20Poly1305(shared_key)
         
         nonce=os.urandom(12)
@@ -110,15 +108,11 @@ class DH:
         bytes = chacha.decrypt(nonce, cipher_text, None)
         data = bytes.decode('utf8')
 
-        print("RECEBIDO: " + data)
-
         return data
 
     def connection(conn):
         x448 = X448_keys()
         ed448 = Ed448_keys()
-
-        print(': Inicio do processo de autenticação')
 
         #private e public key x448
         private_key_x448 = x448.generate_private_key() 
@@ -182,7 +176,5 @@ class DH:
             hkdf.verify(shared_key, derived_key)
         except:
             raise ConnectionError('Falha na derivação')
-
-        print("Conexão estabelecida")
 
         return derived_key

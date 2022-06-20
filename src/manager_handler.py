@@ -37,8 +37,6 @@ class ManagerHandler(Thread):
                 com_str = l[3]
                 mib = list(map(lambda s : ObjectType(ObjectIdentity(s)), l[4:]))
 
-                DH.send("ack," + request_number, self.conn, self.shared_key)
-
                 self.fetch(request_number, getCmd(
                     SnmpEngine(),
                     CommunityData(com_str, mpModel=1),
@@ -51,8 +49,6 @@ class ManagerHandler(Thread):
                 host = l[2]
                 com_str = l[3]  
                 mib = list(map(lambda s : ObjectType(ObjectIdentity(s)), l[4:]))
-
-                DH.send("ack," + request_number, self.conn, self.shared_key)
 
                 self.fetch(request_number, nextCmd(
                     SnmpEngine(),
@@ -69,8 +65,6 @@ class ManagerHandler(Thread):
                 maxRepetitions = int(l[5])
                 mib = list(map(lambda s : ObjectType(ObjectIdentity(s)), l[6:]))
 
-                DH.send("ack," + request_number, self.conn, self.shared_key)
-
                 self.fetch(request_number, bulkCmd(
                     SnmpEngine(),
                     CommunityData(com_str, mpModel=1),
@@ -83,7 +77,7 @@ class ManagerHandler(Thread):
             elif snmp_type=="get_response":
                 if request_number not in self.requests:
                     DH.send("response," + request_number + ",false", self.conn, self.shared_key)
-                elif type(self.requests[request_number] is list):
+                elif isinstance(self.requests[request_number], list):
                     for r in self.requests[request_number]:
                         DH.send("response," + request_number + ",true," + str(r), self.conn, self.shared_key)
                 else:

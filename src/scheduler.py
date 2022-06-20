@@ -16,4 +16,5 @@ class Scheduler(Thread):
             time.sleep(5)
             with self.lock:
                 for r in self.requests:
-                    DH.send("get_response," + r, self.conn, self.shared_key)
+                    if self.requests[r][1] == None:
+                        DH.send("get_response," + r, self.conn, self.shared_key)

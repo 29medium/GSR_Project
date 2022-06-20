@@ -1,7 +1,7 @@
 import socket
 from threading import Thread
 from pysnmp.hlapi import *
-from encrypt import ConnectionError
+from encrypt import EncryptError
 from manager_handler import ManagerHandler
 
 class Proxy:
@@ -22,8 +22,8 @@ class Proxy:
                 manager = ManagerHandler(conn, addr)
                 manager.start()
 
-            except ConnectionError:
-                print("Connection error")
+            except EncryptError:
+                print("Erro a estabelecer ligação com o manager")
                 conn.close()
 
 proxy = Proxy()
