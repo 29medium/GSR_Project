@@ -3,10 +3,10 @@ from pysnmp.hlapi import *
 from threading import Thread
 
 class ManagerHandler(Thread):
-    def __init__(self, conn, addr):
+    def __init__(self, conn, addr, shared_key):
         self.conn = conn
         self.address = addr
-        self.shared_key = DH.connection(conn)
+        self.shared_key = shared_key
         self.requests = dict()
 
         Thread.__init__(self)

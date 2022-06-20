@@ -1,4 +1,5 @@
 import os
+from pickle import FALSE
 from cryptography.exceptions import *
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
@@ -8,6 +9,9 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey
+
+class AuthenticationEncryptError(Exception):
+    pass
 
 class EncryptError(Exception):
     pass
@@ -109,6 +113,46 @@ class DH:
         data = bytes.decode('utf8')
 
         return data
+
+    def authentication_proxy(conn, password, managers, shared_key):
+        # Verificação da password do manager
+        peer_user_name = DH.recv(conn, shared_key)
+        peer_password = DH.recv(conn, shared_key)
+        
+        auth = True
+        if peer_user_name not in managers:
+            auth = False
+        else:
+            if managers[peer_user_name] != peer_password:
+                auth = False
+
+        DH.send(str(auth), conn, shared_key)
+        
+        # Verificação da password do proxy
+        DH.send(password, conn, shared_key)
+        peer_auth = DH.recv(conn, shared_key) == 'True'
+
+        # Confirmação final
+        if not (auth and peer_auth):
+            raise AuthenticationEncryptError
+        
+
+    def authentication_manager(conn, user_name, password, proxy_password, shared_key):
+        # Verificação da password do manager
+        DH.send(user_name, conn, shared_key)
+        DH.send(password, conn, shared_key)
+        peer_auth = DH.recv(conn, shared_key) == 'True'
+        
+        # Verificação da password do proxy
+        auth = True
+        peer_password = DH.recv(conn, shared_key)
+        if peer_password != proxy_password:
+            auth = False
+        DH.send(str(auth), conn, shared_key)
+
+        # Confirmação final
+        if not (auth and peer_auth):
+            raise AuthenticationEncryptError
 
     def connection(conn):
         x448 = X448_keys()
