@@ -15,16 +15,21 @@ class Proxy:
         self.ss.bind((self.HOST, self.PORT))
         self.ss.listen(5)
 
-        while True:
-            conn, addr = self.ss.accept()
-            
-            try:
-                manager = ManagerHandler(conn, addr)
-                manager.start()
+        try:
+            while True:
+                conn, addr = self.ss.accept()
+                
+                try:
+                    manager = ManagerHandler(conn, addr)
+                    manager.daemon = True
+                    manager.start()
 
-            except EncryptError:
-                print("Erro a estabelecer ligação com o manager")
-                conn.close()
+                except EncryptError:
+                    print("Erro a estabelecer ligação com o manager")
+                    conn.close()
+            
+        except KeyboardInterrupt:
+            print("Conexão terminada")
 
 proxy = Proxy()
 proxy.run()

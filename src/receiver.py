@@ -11,21 +11,28 @@ class Receiver(Thread):
         Thread.__init__(self)
 
     def run(self):
-        while True:
-            data = DH.recv(self.conn, self.shared_key)
+        try:
+            while True:
+                data = DH.recv(self.conn, self.shared_key)
 
-            l = data.split(",")
+                l = data.split(",")
 
-            snmp_type = l[0]
-            request_number = l[1]
+                snmp_type = l[0]
+                request_number = l[1]
 
-            if snmp_type=="response":
-                response_type = l[2]
+                if snmp_type=="response":
+                    response_type = l[2]
 
-                if response_type=="true":
-                    with self.lock:
-                        self.requests[request_number][1] = l[3:]
+                    if response_type=="true":
+                        with self.lock:
+                            self.requests[request_number][1] = l[3:]
 
-                elif response_type=="error":
-                    with self.lock:
-                        self.requests[request_number][1] = "Error"
+                    elif response_type=="error":
+                        with self.lock:
+                            self.requests[request_number][1] = "Error"
+        
+        except IndexError:
+            pass
+        
+        except KeyboardInterrupt:
+            pass

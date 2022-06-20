@@ -33,67 +33,71 @@ class Sender(Thread):
         return str(self.request_number)
 
     def run(self):
-        while True:
-            option = Sender.readOption(3)
+        try:
+            while True:
+                option = Sender.readOption(3)
 
-            if option==1:
-                if not self.requests:
-                    print("\nNão existem ainda resultados de pedidos")
-                else:
-                    print("\nResultados:")
-                    for req_number in self.requests:
-                        if self.requests[req_number][1] != None:
-                            print("\n" + str(req_number) + " | " + self.requests[req_number][0])
-
-                            if isinstance(self.requests[req_number][1], list):
-                                for elem in self.requests[req_number][1]:
-                                    print("    " + elem)
-                            else:
-                                print("    " + self.requests[req_number][1])
-            
-            elif option==2:
-                type = input(" Inserir tipo (get/get_next/get_bulk) >> ")
-                if(type in ["get","get_next","get_bulk"]):
-                    req = self.get_request_number()
-
-                    ip = input(" Inserir host >> ")
-                    community = input(" Inserir community string >> ")
-                    oids = input(" Inserir oids separados por virgula >> ")
-
-                    if(type=="get_bulk"):
-                        nonRepeaters = input(" Inserir non repeaters >> ")
-                        maxRepetitions = input(" Inserir max repetitions >> ")
-                        
-                        msg = type + "," + req + ',' + ip + "," + community + "," + nonRepeaters + "," + maxRepetitions + ',' + oids
+                if option==1:
+                    if not self.requests:
+                        print("\nNão existem ainda resultados de pedidos")
                     else:
-                        msg = type + "," + req + ',' + ip + "," + community + "," + oids
+                        print("\nResultados:")
+                        for req_number in self.requests:
+                            if self.requests[req_number][1] != None:
+                                print("\n" + str(req_number) + " | " + self.requests[req_number][0])
 
+                                if isinstance(self.requests[req_number][1], list):
+                                    for elem in self.requests[req_number][1]:
+                                        print("    " + elem)
+                                else:
+                                    print("    " + self.requests[req_number][1])
+                
+                elif option==2:
+                    type = input(" Inserir tipo (get/get_next/get_bulk) >> ")
+                    if(type in ["get","get_next","get_bulk"]):
+                        req = self.get_request_number()
+
+                        ip = input(" Inserir host >> ")
+                        community = input(" Inserir community string >> ")
+                        oids = input(" Inserir oids separados por virgula >> ")
+
+                        if(type=="get_bulk"):
+                            nonRepeaters = input(" Inserir non repeaters >> ")
+                            maxRepetitions = input(" Inserir max repetitions >> ")
+                            
+                            msg = type + "," + req + ',' + ip + "," + community + "," + nonRepeaters + "," + maxRepetitions + ',' + oids
+                        else:
+                            msg = type + "," + req + ',' + ip + "," + community + "," + oids
+
+                        with self.lock:
+                            self.requests[req] = [msg , None]
+
+                        DH.send(msg, self.conn, self.shared_key)
+
+                        print("\nPedido efetuado")
+                    else:
+                        print("\nPedido não efetuado. Tipo incorreto")
+                
+                if option==3:
+                    req = self.get_request_number()
+                    msg = "get," + req + ",192.168.1.68,public,1.3.6.1.2.1.1.1.0"
                     with self.lock:
-                        self.requests[req] = [msg , None]
-
+                            self.requests[req] = [msg , None]
+                    DH.send(msg, self.conn, self.shared_key)
+                    
+                    req = self.get_request_number()
+                    msg = "get_next," + req + ",192.168.1.68,public,1.3.6.1.2.1.1.1.0"
+                    with self.lock:
+                            self.requests[req] = [msg , None]
+                    DH.send(msg, self.conn, self.shared_key)
+                    
+                    req = self.get_request_number()
+                    msg = "get_bulk," + req + ",192.168.1.68,public,0,10,1.3.6.1.2.1.1.3.0"
+                    with self.lock:
+                            self.requests[req] = [msg , None]
                     DH.send(msg, self.conn, self.shared_key)
 
-                    print("\nPedido efetuado")
-                else:
-                    print("\nPedido não efetuado. Tipo incorreto")
-            
-            if option==3:
-                req = self.get_request_number()
-                msg = "get," + req + ",192.168.1.68,public,1.3.6.1.2.1.1.1.0"
-                with self.lock:
-                        self.requests[req] = [msg , None]
-                DH.send(msg, self.conn, self.shared_key)
-                
-                req = self.get_request_number()
-                msg = "get_next," + req + ",192.168.1.68,public,1.3.6.1.2.1.1.1.0"
-                with self.lock:
-                        self.requests[req] = [msg , None]
-                DH.send(msg, self.conn, self.shared_key)
-                
-                req = self.get_request_number()
-                msg = "get_bulk," + req + ",192.168.1.68,public,0,10,1.3.6.1.2.1.1.3.0"
-                with self.lock:
-                        self.requests[req] = [msg , None]
-                DH.send(msg, self.conn, self.shared_key)
-
-                print("\nPedidos efetuados")
+                    print("\nPedidos efetuados")
+                    
+        except KeyboardInterrupt:
+            pass

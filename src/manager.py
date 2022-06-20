@@ -25,16 +25,28 @@ class Manager:
             receiver = Receiver(self.conn, self.shared_key, self.requests, self.lock)
             scheduler = Scheduler(self.conn, self.shared_key, self.requests, self.lock)
 
+            sender.daemon = True
+            receiver.daemon = True
+            scheduler.daemon = True
+
             sender.start()
             receiver.start()
             scheduler.start()
+
+            receiver.join()
+            print("\nConexão interrompida")
+            self.conn.close()
                 
         except EncryptError:
-            print("Erro a estabelecer ligação com o proxy")
+            print("\nErro a estabelecer ligação com o proxy")
             self.conn.close()
 
         except ConnectionRefusedError:
-            print("Proxy indiponível")
+            print("\nProxy indiponível")
+
+        except KeyboardInterrupt:
+            print("\nConexão terminada")
+            #self.conn.close()
 
 manager = Manager()
 manager.run()

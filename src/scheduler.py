@@ -12,9 +12,12 @@ class Scheduler(Thread):
         Thread.__init__(self)
 
     def run(self):
-        while True:
-            time.sleep(5)
-            with self.lock:
-                for r in self.requests:
-                    if self.requests[r][1] == None:
-                        DH.send("get_response," + r, self.conn, self.shared_key)
+        try:
+            while True:
+                time.sleep(5)
+                with self.lock:
+                    for r in self.requests:
+                        if self.requests[r][1] == None:
+                            DH.send("get_response," + r, self.conn, self.shared_key)
+        except KeyboardInterrupt:
+            pass
