@@ -114,6 +114,7 @@ class ManagerHandler(Thread):
                                 DH.send("Opertaion not available", self.conn, self.shared_key)
                     else:
                         DH.send("Invalid oid", self.conn, self.shared_key)
+        
         except IndexError:
             print("Conexão interrompida")
             self.conn.close()
