@@ -1,5 +1,4 @@
 import os
-from pickle import FALSE
 from cryptography.exceptions import *
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
@@ -10,12 +9,15 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.ed448 import Ed448PrivateKey
 
+# Erro de autenticação
 class AuthenticationEncryptError(Exception):
     pass
 
+# Erro na criação da chave partilhada
 class EncryptError(Exception):
     pass
 
+# Classe para criação das chaves DH e para criação da chave partilhada
 class X448_keys:
     def generate_private_key(self):
         private_key = X448PrivateKey.generate()
@@ -37,6 +39,7 @@ class X448_keys:
         shared_key = private_key.exchange(other_public_key)
         return shared_key
 
+# Classe para criação das chaves DSA e ciração e verificação da assinatura
 class Ed448_keys:
     def generate_private_key(self):
         private_key = Ed448PrivateKey.generate()
@@ -61,12 +64,15 @@ class Ed448_keys:
     def verify_signature(self,peer_public_key,signature,message):
         peer_public_key.verify(signature,message)
 
+# Classe responsável pela troca de chaves, autenticação e encriptação
 class DH:
+    # Função que aplica o algoritmo de hash SHA256 a uma string
     def hashs(s):
         digest = hashes.Hash(hashes.SHA256(),backend=default_backend())
         digest.update(s)
         return digest.finalize()
 
+    # Função que envia uma mensagem 
     def conn_send(conn, msg):
         size = str(len(msg)).encode('utf8')
         conn.sendall(size)
@@ -75,7 +81,8 @@ class DH:
 
         x = bytearray(msg)
         conn.sendall(x)
-        
+    
+    # Função que recebe uma mensagem
     def conn_recv(conn):
         buffer = bytearray()
         flag = True
@@ -93,6 +100,7 @@ class DH:
         
         return recv
 
+    # Função que encripta e envia uma mensagem
     def send(str, conn, shared_key):
         chacha = ChaCha20Poly1305(shared_key)
         
@@ -103,6 +111,7 @@ class DH:
 
         DH.conn_send(conn, nonce)
 
+    # Função que recebe uma mensagem e desencripta
     def recv(conn, shared_key):
         cipher_text = DH.conn_recv(conn)
         nonce = DH.conn_recv(conn)
@@ -114,6 +123,7 @@ class DH:
 
         return data
 
+    # Função que autentica o proxy
     def authentication_proxy(conn, password, managers, shared_key):
         # Verificação da password do manager
         peer_user_name = DH.recv(conn, shared_key)
@@ -136,7 +146,7 @@ class DH:
         if not (auth and peer_auth):
             raise AuthenticationEncryptError
         
-
+    # Função que autentica o manager
     def authentication_manager(conn, user_name, password, proxy_password, shared_key):
         # Verificação da password do manager
         DH.send(user_name, conn, shared_key)
@@ -154,6 +164,7 @@ class DH:
         if not (auth and peer_auth):
             raise AuthenticationEncryptError
 
+    # Função que realiza a troca de chaves entre o proxy e o manager
     def connection(conn):
         x448 = X448_keys()
         ed448 = Ed448_keys()
@@ -167,8 +178,8 @@ class DH:
         public_key_ed448 = ed448.generate_public_key(private_key_ed448)
 
         #serealizar public keys
-        public_key_ed448_bytes = ed448.serialize_public_key(public_key_ed448)
         public_key_x448_bytes = x448.serialize_public_key(public_key_x448)
+        public_key_ed448_bytes = ed448.serialize_public_key(public_key_ed448)
 
         #Assinatura
         signature = ed448.generate_signature(private_key_ed448,public_key_x448_bytes)

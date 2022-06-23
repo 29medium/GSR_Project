@@ -1,0 +1,122 @@
+requestsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF requestsTableEntradasTipos
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Tabela RequestTable para ser utilizada no proxy"
+
+requestsTableEntradas OBJECT-TYPE
+    SYNTAX      requestsTableEntradasTipos
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Coluna de cada linha da tabela RequestTable"
+    INDEX { idOper } ::= { requestsTable 1 }
+
+requestsTableEntradasTipos ::=
+    SEQUENCE {
+        idOper              Integer32,
+        typeOper            Integer32,
+        idSource            OCTET STRING,
+        idDestination       OCTET STRING,
+        oidArg              OBJECT IDENTIFIER,
+        valueArg            Opaque,
+        typeArg             Integer32,
+        sizeArg             Integer32
+    }
+
+idOper OBJECT-TYPE
+    SYNTAX          Integer32
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Identificador da operação recebida pelo agente proxy.
+                    Serve como chave da tabela."
+    ::= { requestsTableEntradas 1 }
+
+typeOper OBJECT-TYPE
+    SYNTAX          Integer32
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Identificador do tipo de operação a ser executada.
+                    Neste exemplo é usado o valor '0' para a operação 'get' e
+                    o valor '1' para a operação 'getnext'."
+    ::= { requestsTableEntradas 2 }
+
+idSource OBJECT-TYPE
+    SYNTAX          OCTET STRING
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Alias identificativo da fonte do pedido (gestor)."
+    ::= { requestsTableEntradas 3 }
+
+idDestination OBJECT-TYPE
+    SYNTAX          OCTET STRING
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Alias identificativo do destino do pedido e onde a operação
+                    será executada (agente SNPv2c)."
+    ::= { requestsTableEntradas 4 }
+
+oidArg OBJECT-TYPE
+    SYNTAX          OBJECT IDENTIFIER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Object Identifier do objecto da MIB que é argumento da operação."
+    ::= { requestsTableEntradas 5 }
+
+valueArg OBJECT-TYPE
+    SYNTAX          Opaque
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Resultado da operação executada no agente SNMPv2c. Esta entrada
+                    da tabela é do tipo Opaque e será necessário aceder à coluna 'typeArg'
+                    para saber o seu tipo e à 'sizeArg' para saber o seu tamanho."
+    ::= { requestsTableEntradas 6 }
+
+typeArg OBJECT-TYPE
+    SYNTAX          Integer32
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Identificador sequencial do tipo de dados de 'valueArg'."
+    ::= { requestsTableEntradas 7 }
+
+sizeArg OBJECT-TYPE
+    SYNTAX          Integer32
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Tamanho em bytes de 'valueArg'. Enquanto o valor da operação não
+                    for retornado, esta entrada deverá ser igual a zero."
+    ::= { requestsTableEntradas 8 }
+
+
+
+keyTabela OBJECT-TYPE
+    SYNTAX      SEQUENCE OF keyTabelaEntradasTipos
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Tabela keyTable para ser utilizada no proxy para guardar as chaves partilhadas"
+
+keyTabelaEntradas OBJECT-TYPE
+    SYNTAX      keyTabelaEntradasTipos
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Coluna de cada linha da tabela keyTable"
+    INDEX { idSourceKey } ::= { keyTabela 1 }
+
+keyTabelaEntradasTipos ::=
+    SEQUENCE {
+        idSourceKey OCTET STRING,
+        sharedKey   OCTET STRING
+    }
+
+idSource OBJECT-TYPE
+    SYNTAX          OCTET STRING
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Alias identificativo do manager."
+    ::= { keyTabelaEntradas 1 }
+
+sharedKey OBJECT-TYPE
+    SYNTAX          OCTET STRING
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     "Shared Key associada ao manager"
+    ::= { keyTabelaEntradas 2 }
